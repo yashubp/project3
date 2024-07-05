@@ -1,0 +1,61 @@
+import json
+from datetime import datetime
+import pandas as pd
+
+monthly = ["Rent/mortgage", "Health care", "EMI"]
+daily = ["Groceries", "Transportation", "Personal Care", "Entertainment", "Miscellaneous"]
+database = {}
+
+def get_expenses(expense_list, database):
+    total = 0
+    for key in expense_list:
+        while True:
+            try:
+                value = float(input(f"{key}: Rs "))
+                break
+            except ValueError:
+                print("Invalid input. Please enter a numeric value.")
+        database[key] = value
+        total += value
+    return total
+
+def expenses(daily, database):
+    print("Daily Expenses:")
+    total = get_expenses(daily, database)
+    add_monthly = input("Do you want to add monthly expenses? (y/n): ").strip().lower()
+    if add_monthly == 'y':
+        print("Monthly Expenses:")
+        total += get_expenses(monthly, database)
+    
+    database["Z_Total"] = total
+    with open('data.json', 'w') as json_file:
+        data_to_save = {
+            "timestamp": datetime.now().isoformat(),
+            "expenses": database
+        }
+        json.dump(data_to_save, json_file, indent=4)
+
+def report():
+    try:
+        df = pd.read_json('data.json')
+        print(df)
+    except FileNotFoundError:
+        print("No data found. Please add expenses first.")
+    except ValueError:
+        print("Error reading the JSON file.")
+
+def start(daily, database):
+    while True:
+        print("\n1. Add expenses\n2. View report\n3. Exit")
+        choice = input("Enter your choice: ").strip()
+        if choice == '1':
+            expenses(daily, database)
+        elif choice == '2':
+            report()
+        elif choice == '3':
+            break
+        else:
+            print("Invalid choice, please try again.")
+
+if __name__ == "__main__":
+    start(daily, database)
